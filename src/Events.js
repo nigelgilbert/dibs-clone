@@ -5,6 +5,7 @@ const Events = Object.freeze({
   QUEUED: "QUEUED",
   RESERVED: "RESERVED",
   RELEASED: "RELEASED",
+  UPDATED: "UPDATED"
 });
 
 module.exports = Events;

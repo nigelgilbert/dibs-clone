@@ -32,13 +32,19 @@ function reserveResource(name, user, channel, duration) {
   const existingResource = resources.find((r) => r?.name === name);
 
   if (existingResource) {
-    // @todo – branching logic
     // check if it's the same user... if it is, then just update the timeout
-
-    // enqueue the next waiting person
-    existingResource.queue.push({ user, duration });
-    eventEmitter.emit(Events.QUEUED, name, user, channel);
-    logResources(resources);
+    if (existingResource.queue[0].user === user) {
+      clearTimeout(existingResource.timeout);
+      existingResource.timeout = setTimeout(() => {
+        checkQueue(name, channel);
+      }, duration);
+      eventEmitter.emit(Events.UPDATED, name, user, channel, duration);
+    } else {
+      // enqueue the next waiting person
+      existingResource.queue.push({ user, duration });
+      eventEmitter.emit(Events.QUEUED, name, user, channel);
+      logResources(resources);
+    }
   } else {
     // start the timeout that checks the queue once it's done
     const timeout = setTimeout(() => {

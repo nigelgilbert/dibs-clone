@@ -62,6 +62,15 @@ eventEmitter.on(Events.QUEUED, async (resource, user, channel) => {
   });
 });
 
+eventEmitter.on(Events.UPDATED, async (resource, user, channel, duration) => {
+  await app.client.chat.postMessage({
+    channel: channel,
+    text: `<@${user}> is still holding \`${resource}\` for ${msToTimeStr(
+      duration
+    )}`,
+  });
+});
+
 (async () => {
   // Start your app
   await app.start();
