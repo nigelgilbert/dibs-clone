@@ -1,9 +1,14 @@
 require("dotenv/config");
-// const parse = require("parse-duration");
 const bolt = require("@slack/bolt");
 const { App } = bolt;
-
-const { reserveResource, eventEmitter, Events } = require("./src/ResourceQueue");
+const parseDuration = require("./src/parseDuration");
+const parseCommand = require("./src/parseCommand");
+const msToTimeStr = require("./src/msToTimeStr");
+const {
+  reserveResource,
+  eventEmitter,
+  Events,
+} = require("./src/ResourceQueue");
 
 // Initializes your app in socket mode with your app token and signing secret
 const app = new App({
@@ -27,17 +32,11 @@ app.command("/dibs", async ({ command, ack, say }) => {
   // given "on staging for 1 hour"
   // match[1] = "staging"
   // match[2] = "1 hour"
-  const regex = /on (.+) for (.+)/g;
-  const match = regex.exec(command.text);
+  const match = parseCommand(command.text);
+  const duration = await parseDuration(match[2]);
 
   // call dibs
-  reserveResource(
-    match[1],
-    command.user_name,
-    command.channel_name,
-    5 * 1000
-    // parse(match[2])
-  );
+  reserveResource(match[1], command.user_name, command.channel_name, duration);
 });
 
 eventEmitter.on(Events.RELEASED, async (name, user, channel) => {
@@ -50,9 +49,9 @@ eventEmitter.on(Events.RELEASED, async (name, user, channel) => {
 eventEmitter.on(Events.RESERVED, async (resource, user, channel, duration) => {
   await app.client.chat.postMessage({
     channel: channel,
-    text: `<@${user}> is now holding \`${resource}\` for ${
-      duration / 1000
-    } seconds`,
+    text: `<@${user}> is now holding \`${resource}\` for ${msToTimeStr(
+      duration
+    )}`,
   });
 });
 
