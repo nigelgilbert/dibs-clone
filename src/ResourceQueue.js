@@ -1,6 +1,6 @@
-import { EventEmitter } from "node:events";
-import { logResources } from "./logging.js";
-import Events from "./events.js";
+const EventEmitter = require("events");
+const { logResources } = require("./logging.js");
+const Events = require("./events.js");
 
 const eventEmitter = new EventEmitter();
 
@@ -92,4 +92,4 @@ async function queueNextPerson(resource, channel) {
   }, duration);
 }
 
-export { reserveResource, eventEmitter, Events };
+module.exports = { reserveResource, eventEmitter, Events };
