@@ -3,7 +3,7 @@ import parse from "parse-duration";
 import bolt from "@slack/bolt";
 const { App } = bolt;
 
-import { dibs, eventEmitter } from "./ResourceQueue.js";
+import { dibs, eventEmitter } from "./src/ResourceQueue.js";
 
 // Initializes your app in socket mode with your app token and signing secret
 const app = new App({

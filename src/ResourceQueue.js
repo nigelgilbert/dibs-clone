@@ -7,16 +7,16 @@ function replacer(key, value) {
   else return value;
 }
 
+
 /**
- * [
- *   {
- *     name: string,
- *     queue: [{ user: string, duration: number }],
- *     timeout: NodeJS.Timeout,
- *     channel: string
- *   },
- * ];
+ * @typedef {Object} Resource
+ * @property {string} name
+ * @property {QueueItem[]} queue
+ * @property {NodeJS.Timeout} timeout
+ * @property {string} channel
  */
+
+/** @type {Resource[]} */
 const resources = [];
 
 /**
