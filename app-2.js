@@ -1,9 +1,9 @@
-import 'dotenv/config';
+import "dotenv/config";
 import parse from "parse-duration";
 import bolt from "@slack/bolt";
 const { App } = bolt;
 
-import { dibs, eventEmitter } from "./src/ResourceQueue.js";
+import { reserveResource, eventEmitter, Events } from "./src/ResourceQueue.js";
 
 // Initializes your app in socket mode with your app token and signing secret
 const app = new App({
@@ -31,17 +31,22 @@ app.command("/dibs", async ({ command, ack, say }) => {
   const match = regex.exec(command.text);
 
   // call dibs
-  dibs(match[1], command.user_name, command.channel_name, parse(match[2]));
+  reserveResource(
+    match[1],
+    command.user_name,
+    command.channel_name,
+    parse(match[2])
+  );
 });
 
-eventEmitter.on("RELEASED", async (name, user, channel) => {
+eventEmitter.on(Events.RELEASED, async (name, user, channel) => {
   await app.client.chat.postMessage({
     channel: channel,
     text: `<@${user}> has released \`${name}\``,
   });
 });
 
-eventEmitter.on("RESERVED", async (resource, user, channel, duration) => {
+eventEmitter.on(Events.RESERVED, async (resource, user, channel, duration) => {
   await app.client.chat.postMessage({
     channel: channel,
     text: `<@${user}> is now holding \`${resource}\` for ${
@@ -50,7 +55,7 @@ eventEmitter.on("RESERVED", async (resource, user, channel, duration) => {
   });
 });
 
-eventEmitter.on("QUEUED", async (resource, user, channel) => {
+eventEmitter.on(Events.QUEUED, async (resource, user, channel) => {
   await app.client.chat.postMessage({
     channel: channel,
     text: `<@${user}> is in queue for \`${resource}\``,

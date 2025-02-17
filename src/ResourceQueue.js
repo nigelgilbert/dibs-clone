@@ -1,12 +1,14 @@
 import { EventEmitter } from "node:events";
+import { logResources } from "./logging.js";
+import Events from "./events.js";
 
 const eventEmitter = new EventEmitter();
 
-function replacer(key, value) {
-  if (key == "timeout") return true;
-  else return value;
-}
-
+/**
+ * @typedef {Object} QueueItem
+ * @property {string} user
+ * @property {string} channel
+ */
 
 /**
  * @typedef {Object} Resource
@@ -26,7 +28,7 @@ const resources = [];
  * @param {string} channel
  * @param {number} duration
  */
-function dibs(name, user, channel, duration) {
+function reserveResource(name, user, channel, duration) {
   const existingResource = resources.find((r) => r?.name === name);
 
   if (existingResource) {
@@ -35,9 +37,8 @@ function dibs(name, user, channel, duration) {
 
     // enqueue the next waiting person
     existingResource.queue.push({ user, duration });
-    eventEmitter.emit("QUEUED", name, user, channel);
-    console.log(JSON.stringify(resources, replacer));
-
+    eventEmitter.emit(Events.QUEUED, name, user, channel);
+    logResources(resources);
   } else {
     // start the timeout that checks the queue once it's done
     const timeout = setTimeout(() => {
@@ -52,8 +53,8 @@ function dibs(name, user, channel, duration) {
       timeout,
     });
 
-    console.log(JSON.stringify(resources, replacer));
-    eventEmitter.emit("RESERVED", name, user, channel, duration);
+    eventEmitter.emit(Events.RESERVED, name, user, channel, duration);
+    logResources(resources);
   }
 }
 
@@ -67,19 +68,13 @@ async function checkQueue(name, channel) {
 
   const { user, duration } = released.queue.shift();
 
-  console.log(JSON.stringify(resources, replacer));
-
   // delete the resource map entry if it's empty
   if (released.queue.length === 0) {
-    eventEmitter.emit("RELEASED", released.name, user, channel);
-    // delete resources[index];
-    // better than `delete` – this way GC can remove objects without `null` indices
     resources.splice(index, 1);
-
-    console.log(JSON.stringify(resources, replacer));
-
-    // if there's more stuff in the queue...
+    eventEmitter.emit(Events.RELEASED, released.name, user, channel);
+    logResources(resources);
   } else {
+    // if there's more stuff in the queue...
     queueNextPerson(released, channel);
   }
 }
@@ -88,8 +83,8 @@ async function queueNextPerson(resource, channel) {
   const user = resource.queue[0].user;
   const duration = resource.queue[0].duration;
 
-  console.log(JSON.stringify(resources, replacer));
-  eventEmitter.emit("RESERVED", resource.name, user, channel, duration);
+  eventEmitter.emit(Events.RESERVED, resource.name, user, channel, duration);
+  logResources(resources);
 
   // set the timeout to re-check
   setTimeout(async () => {
@@ -97,4 +92,4 @@ async function queueNextPerson(resource, channel) {
   }, duration);
 }
 
-export { dibs, eventEmitter };
+export { reserveResource, eventEmitter, Events };
