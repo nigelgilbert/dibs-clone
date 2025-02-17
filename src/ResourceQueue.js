@@ -1,5 +1,5 @@
 const EventEmitter = require("events");
-const { logResources } = require("./logging.js");
+const { logResources } = require("./logResources.js");
 const Events = require("./events.js");
 
 const eventEmitter = new EventEmitter();
