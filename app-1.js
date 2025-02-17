@@ -1,6 +1,6 @@
-import 'dotenv/config';
-import parse from "parse-duration";
-import bolt from "@slack/bolt";
+require("dotenv/config");
+const parse = require("parse-duration");
+const bolt = require("@slack/bolt");
 const { App } = bolt;
 
 // example resource object

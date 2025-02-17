@@ -1,9 +1,9 @@
-import "dotenv/config";
-import parse from "parse-duration";
-import bolt from "@slack/bolt";
+require("dotenv/config");
+// const parse = require("parse-duration");
+const bolt = require("@slack/bolt");
 const { App } = bolt;
 
-import { reserveResource, eventEmitter, Events } from "./src/ResourceQueue.js";
+const { reserveResource, eventEmitter, Events } = require("./src/ResourceQueue");
 
 // Initializes your app in socket mode with your app token and signing secret
 const app = new App({
@@ -35,7 +35,8 @@ app.command("/dibs", async ({ command, ack, say }) => {
     match[1],
     command.user_name,
     command.channel_name,
-    parse(match[2])
+    5 * 1000
+    // parse(match[2])
   );
 });
 
