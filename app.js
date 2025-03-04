@@ -18,6 +18,9 @@ const app = new App({
   appToken: process.env.SLACK_APP_TOKEN, // add this
 });
 
+// For now, 1 static channel is fine for our usecase
+const channel = process.env.CHANNEL;
+
 // Listens to incoming messages that contain "hello"
 app.message("hello", async ({ message, say }) => {
   // say() sends a message to the channel where the event was triggered
@@ -36,17 +39,17 @@ app.command("/dibs", async ({ command, ack, say }) => {
   const duration = await parseDuration(match[2]);
 
   // call dibs
-  reserveResource(match[1], command.user_name, command.channel_name, duration);
+  reserveResource(match[1], command.user_name, duration);
 });
 
-eventEmitter.on(Events.RELEASED, async (name, user, channel) => {
+eventEmitter.on(Events.RELEASED, async (name, user) => {
   await app.client.chat.postMessage({
     channel: channel,
     text: `<@${user}> has released \`${name}\``,
   });
 });
 
-eventEmitter.on(Events.RESERVED, async (resource, user, channel, duration) => {
+eventEmitter.on(Events.RESERVED, async (resource, user, duration) => {
   await app.client.chat.postMessage({
     channel: channel,
     text: `<@${user}> is now holding \`${resource}\` for ${msToTimeStr(
@@ -55,14 +58,14 @@ eventEmitter.on(Events.RESERVED, async (resource, user, channel, duration) => {
   });
 });
 
-eventEmitter.on(Events.QUEUED, async (resource, user, channel) => {
+eventEmitter.on(Events.QUEUED, async (resource, user) => {
   await app.client.chat.postMessage({
     channel: channel,
     text: `<@${user}> is in queue for \`${resource}\``,
   });
 });
 
-eventEmitter.on(Events.UPDATED, async (resource, user, channel, duration) => {
+eventEmitter.on(Events.UPDATED, async (resource, user, duration) => {
   await app.client.chat.postMessage({
     channel: channel,
     text: `<@${user}> is still holding \`${resource}\` for ${msToTimeStr(
