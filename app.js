@@ -15,8 +15,8 @@ const {
 const app = new App({
   token: process.env.SLACK_BOT_TOKEN,
   signingSecret: process.env.SLACK_SIGNING_SECRET,
-  socketMode: true, // add this
-  appToken: process.env.SLACK_APP_TOKEN, // add this
+  socketMode: false,
+  appToken: process.env.SLACK_APP_TOKEN,
 });
 
 // For now, 1 static channel is fine for our usecase
@@ -29,7 +29,7 @@ app.message("hello", async ({ message, say }) => {
 });
 
 // The echo command simply echoes on command
-app.command("/dibs", async ({ command, ack, say }) => {
+app.command("/ng-dibs", async ({ command, ack, say }) => {
   // Acknowledge command request
   await ack();
 
