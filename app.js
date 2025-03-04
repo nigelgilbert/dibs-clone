@@ -98,7 +98,7 @@ eventEmitter.on(Events.ERROR_ALREADY_IN_QUEUE, async (resource, user) => {
 
 (async () => {
   // Start your app
-  await app.start();
+  await app.start(process.env.PORT || 3000);
 
   app.logger.info("⚡️ Bolt app is running!");
 })();
