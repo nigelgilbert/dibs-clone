@@ -22,12 +22,6 @@ const app = new App({
 // For now, 1 static channel is fine for our usecase
 const channel = process.env.CHANNEL;
 
-// Listens to incoming messages that contain "hello"
-app.message("hello", async ({ message, say }) => {
-  // say() sends a message to the channel where the event was triggered
-  await say(`Hey there <@${message.user}>!`);
-});
-
 // The echo command simply echoes on command
 app.command("/ng-dibs", async ({ command, ack, say }) => {
   // Acknowledge command request
