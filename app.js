@@ -79,7 +79,7 @@ eventEmitter.on(Events.UPDATED, async (resource, user, duration) => {
 eventEmitter.on(Events.ERROR_NOT_HOLDING_RESOURCE, async (resource, user) => {
   await app.client.chat.postMessage({
     channel: channel,
-    text: `Cannot release resource because <@${user}> is not holding \`${resource}\``,
+    text: `Cannot release \`${resource}\` because <@${user}> does not have dibs!`,
   });
 });
 
