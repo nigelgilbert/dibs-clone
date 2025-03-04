@@ -29,7 +29,6 @@ function reserveResource(name, user, duration) {
   const existingResource = resources.find((r) => r?.name === name);
 
   if (existingResource) {
-    console.log("reserveResource() – existing user found");
     // check if it's the same user... if it is, then just update the timeout
     if (existingResource.queue[0].user === user) {
       clearTimeout(existingResource.timeout);
@@ -66,13 +65,6 @@ function reserveResource(name, user, duration) {
  */
 async function checkQueue(name) {
   let index = resources.findIndex((r) => r?.name === name);
-
-  if (!index) {
-    console.log("ayo not found");
-    return;
-  }
-
-  console.log("checkQueue() – existing user found");
 
   const released = resources[index];
 
