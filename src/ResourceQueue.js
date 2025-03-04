@@ -7,6 +7,7 @@ const eventEmitter = new EventEmitter();
 /**
  * @typedef {Object} UserQueue
  * @property {string} user
+ * @property {number} duration
  */
 
 /**
@@ -33,19 +34,25 @@ function reserveResource(name, user, duration) {
     if (existingResource.queue[0].user === user) {
       clearTimeout(existingResource.timeout);
       existingResource.timeout = setTimeout(() => {
-        checkQueue(name);
+        _releaseResource(name);
       }, duration);
       eventEmitter.emit(Events.UPDATED, name, user, duration);
     } else {
-      // enqueue the next waiting person
-      existingResource.queue.push({ user, duration });
-      eventEmitter.emit(Events.QUEUED, name, user);
-      logResources(resources);
+      // check that they're not in queue already
+      if (!existingResource.queue.find((entry) => entry.user === user)) {
+        // enqueue the next waiting person
+        existingResource.queue.push({ user, duration });
+        eventEmitter.emit(Events.QUEUED, name, user);
+        logResources(resources);
+      } else {
+        // just emit an error if they're already in queue
+        eventEmitter.emit(Events.ERROR_ALREADY_IN_QUEUE, name, user);
+      }
     }
   } else {
     // start the timeout that checks the queue once it's done
     const timeout = setTimeout(() => {
-      checkQueue(name);
+      _releaseResource(name);
     }, duration);
 
     // start a new queue
@@ -63,7 +70,7 @@ function reserveResource(name, user, duration) {
 /**
  * @param {string} resource
  */
-async function checkQueue(name) {
+async function _releaseResource(name) {
   let index = resources.findIndex((r) => r?.name === name);
 
   const released = resources[index];
@@ -77,11 +84,11 @@ async function checkQueue(name) {
     logResources(resources);
   } else {
     // if there's more stuff in the queue...
-    queueNextPerson(released);
+    _queueNextPerson(released);
   }
 }
 
-async function queueNextPerson(resource) {
+async function _queueNextPerson(resource) {
   const user = resource.queue[0].user;
   const duration = resource.queue[0].duration;
 
@@ -90,8 +97,24 @@ async function queueNextPerson(resource) {
 
   // set the timeout to re-check
   resource.timeout = setTimeout(async () => {
-    checkQueue(resource.name);
+    _releaseResource(resource.name);
   }, duration);
 }
 
-module.exports = { reserveResource, eventEmitter, Events };
+/**
+ * Externally facing `releaseResource` with safety checks!
+ * This ensures that any rando can't just release your resource!
+ * @param {string} name
+ * @param {string} user
+ */
+function releaseResource(name, user) {
+  const resource = resources.find((r) => r?.name === name);
+  if (resource.queue[0].user === user) {
+    clearTimeout(resource.timeout);
+    _releaseResource(name);
+  } else {
+    eventEmitter.emit(Events.ERROR_NOT_HOLDING_RESOURCE, name, user);
+  }
+}
+
+module.exports = { reserveResource, releaseResource, eventEmitter, Events };

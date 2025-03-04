@@ -2,10 +2,11 @@ require("dotenv/config");
 const bolt = require("@slack/bolt");
 const { App } = bolt;
 const parseDuration = require("./src/parseDuration");
-const parseCommand = require("./src/parseCommand");
+const { parseOnCommand, parseOffCommand } = require("./src/parseCommand");
 const msToTimeStr = require("./src/msToTimeStr");
 const {
   reserveResource,
+  releaseResource,
   eventEmitter,
   Events,
 } = require("./src/ResourceQueue");
@@ -32,14 +33,21 @@ app.command("/dibs", async ({ command, ack, say }) => {
   // Acknowledge command request
   await ack();
 
-  // given "on staging for 1 hour"
-  // match[1] = "staging"
-  // match[2] = "1 hour"
-  const match = parseCommand(command.text);
-  const duration = await parseDuration(match[2]);
+  if (command.text.includes("on")) {
+    // given "on staging for 1 hour"
+    // match[1] = "staging"
+    // match[2] = "1 hour"
+    const match = parseOnCommand(command.text);
+    const duration = await parseDuration(match[2]);
 
-  // call dibs
-  reserveResource(match[1], command.user_name, duration);
+    // call dibs
+    reserveResource(match[1], command.user_name, duration);
+  } else if (command.text.includes("off")) {
+    // given "off staging"
+    // match[1] = "staging"
+    const match = parseOffCommand(command.text);
+    releaseResource(match[1], command.user_name);
+  }
 });
 
 eventEmitter.on(Events.RELEASED, async (name, user) => {
@@ -71,6 +79,20 @@ eventEmitter.on(Events.UPDATED, async (resource, user, duration) => {
     text: `<@${user}> is still holding \`${resource}\` for ${msToTimeStr(
       duration
     )}`,
+  });
+});
+
+eventEmitter.on(Events.ERROR_NOT_HOLDING_RESOURCE, async (resource, user) => {
+  await app.client.chat.postMessage({
+    channel: channel,
+    text: `Cannot release resource because <@${user}> is not holding \`${resource}\``,
+  });
+});
+
+eventEmitter.on(Events.ERROR_ALREADY_IN_QUEUE, async (resource, user) => {
+  await app.client.chat.postMessage({
+    channel: channel,
+    text: `<@${user}> is already in queue for \`${resource}\``,
   });
 });
 
