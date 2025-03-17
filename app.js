@@ -44,6 +44,25 @@ app.command(`/${process.env.COMMAND}`, async ({ command, ack, say }) => {
   }
 });
 
+// Respond to direct mentions, e.g. @dibs
+app.event("app_mention", async ({ event, say }) => {
+  if (event.text.includes("on")) {
+    // given "on staging for 1 hour"
+    // match[1] = "staging"
+    // match[2] = "1 hour"
+    const match = parseOnCommand(event.text);
+    const duration = await parseDuration(match[2]);
+
+    // call dibs
+    reserveResource(match[1], event.user, duration);
+  } else if (event.text.includes("off")) {
+    // given "off staging"
+    // match[1] = "staging"
+    const match = parseOffCommand(event.text);
+    releaseResource(match[1], event.user);
+  }
+});
+
 eventEmitter.on(Events.RELEASED, async (name, user) => {
   await app.client.chat.postMessage({
     channel: channel,
@@ -89,7 +108,6 @@ eventEmitter.on(Events.ERROR_ALREADY_IN_QUEUE, async (resource, user) => {
     text: `<@${user}> is already in queue for \`${resource}\``,
   });
 });
-
 
 (async () => {
   // Start your app
