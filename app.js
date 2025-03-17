@@ -15,7 +15,7 @@ const {
 const app = new App({
   token: process.env.SLACK_BOT_TOKEN,
   signingSecret: process.env.SLACK_SIGNING_SECRET,
-  socketMode: false,
+  socketMode: true,
   appToken: process.env.SLACK_APP_TOKEN,
 });
 
@@ -23,7 +23,7 @@ const app = new App({
 const channel = process.env.CHANNEL;
 
 // The echo command simply echoes on command
-app.command("/ng-dibs", async ({ command, ack, say }) => {
+app.command(`/${process.env.COMMAND}`, async ({ command, ack, say }) => {
   // Acknowledge command request
   await ack();
 
@@ -89,6 +89,7 @@ eventEmitter.on(Events.ERROR_ALREADY_IN_QUEUE, async (resource, user) => {
     text: `<@${user}> is already in queue for \`${resource}\``,
   });
 });
+
 
 (async () => {
   // Start your app
