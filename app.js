@@ -35,12 +35,12 @@ app.command(`/${process.env.COMMAND}`, async ({ command, ack, say }) => {
     const duration = await parseDuration(match[2]);
 
     // call dibs
-    reserveResource(match[1], command.user_name, duration);
+    reserveResource(match[1], command.user, duration);
   } else if (command.text.includes("off")) {
     // given "off staging"
     // match[1] = "staging"
     const match = parseOffCommand(command.text);
-    releaseResource(match[1], command.user_name);
+    releaseResource(match[1], command.user);
   }
 });
 
